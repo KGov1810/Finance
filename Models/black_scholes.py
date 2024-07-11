@@ -5,7 +5,7 @@ from scipy.stats import norm
 
 class BlackScholes:
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.strike = kwargs.get("strike")
         self.spot = kwargs.get("spot")
         self.maturity = kwargs.get("maturity")
@@ -29,6 +29,3 @@ class BlackScholes:
         d1, d2 = self._black_scholes_elements()
         put_price = self.strike * math.exp(-self.risk_free * self.maturity) * norm.cdf(-d2) - self.spot * norm.cdf(-d1)
         return put_price
-
-    def calculate_call_and_put(self):
-        return self.calculate_call(), self.calculate_put()

@@ -1,79 +1,118 @@
 import tkinter as tk
+import tkinter.font as tkfont
+from tkinter import messagebox
+from PIL import ImageTk, Image
 
 from Models.black_scholes import BlackScholes
 
 
 class GUI:
 
-    def __init__(self):
-        None
+    def __init__(self, **kwargs):
+        self.principal_window = kwargs.get("main_window")
 
-    def _select_model(self, model_name: str, old_window: tk.Tk):
+        self.entries = {}
+
+        self.initial_frame = None
+        self.model_frame = None
+        self.label_call_result = None
+        self.label_put_result = None
+
+    def _select_model(self, model_name: str):
         """Select the model you want"""
-        old_window.destroy()
-        model_window = tk.Tk()
-        model_window.title(f"{model_name} Model")
-        model_window.minsize(400, 300)
+        self.initial_frame.pack_forget()
 
         if model_name == "Black-Scholes":
-            self._create_black_scholes_window(model_window)
-        else:
-            label = tk.Label(model_window, text="NOT IMPLEMENTED !")
-            label.grid(row=0, column=0, padx=10, pady=4)
+            self._create_black_scholes_window()
+        elif model_name == "Binomial":
+            self.model_frame = tk.Frame(self.principal_window)
+            self.model_frame.pack(fill='both', expand=True)
 
     def create_principal_window(self):
         """Create the principal window"""
-        principal_window = tk.Tk()
-        principal_window.title("Select your model")
-        principal_window.minsize(300, 200)
+        self.initial_frame = tk.Frame(self.principal_window)
+        self.initial_frame.pack(fill='both', expand=True)
 
-        button_bs = tk.Button(principal_window, text="Black Scholes Model", command=lambda: self._select_model("Black-Scholes", old_window=principal_window))
+        tk.Label(self.initial_frame, text="Choose your pricing model").pack(pady=20)
+
+        button_bs = tk.Button(self.initial_frame, text="Black Scholes Model",
+                              command=lambda: self._select_model("Black-Scholes"))
         button_bs.pack(padx=20, pady=10)
 
-        button_binomial = tk.Button(principal_window, text="Test Model", command=lambda: self._select_model("Binomial"))
+        button_binomial = tk.Button(self.initial_frame, text="Binomial Model",
+                                    command=lambda: self._select_model("Binomial"))
         button_binomial.pack(padx=20, pady=10)
 
-        return principal_window.mainloop()
-
-    def _create_black_scholes_window(self, window: tk.Tk):
+    def _create_black_scholes_window(self):
         """Create specific window for the black-scholes model"""
+        self.model_frame = tk.Frame(self.principal_window)
+        self.model_frame.pack(fill='both', expand=True)
 
-        # Parameters to calculate the black_scholes model
-        labels = ["Actual price of the underlying (S):", "Strike Price (K):", "Maturity (T):",
-                  "Risk Free Rate (r):", "Volatility (sigma):"]
-        defaults = [100, 100, 1, 0.05, 0.2]
-        entries = []
+        labels = {
+            "S": "Spot price (S):",
+            "K": "Strike Price (K):",
+            "T": "Maturity (T):",
+            "r": "Risk Free Rate (r):",
+            "sigma": "Volatility (sigma):"
+        }
+        defaults = {"S": 100,
+                    "K": 100,
+                    "T": 1,
+                    "r": 0.05,
+                    "sigma": 0.2}
 
-        for i, (label_text, default_value) in enumerate(zip(labels, defaults)):
-            label = tk.Label(window, text=label_text)
-            label.grid(row=i, column=0, padx=10, pady=5, sticky="e")
-            entry = tk.Entry(window)
-            entry.insert(0, str(default_value))
-            entry.grid(row=i, column=1, padx=10, pady=5, sticky="ew")
-            entries.append(float(entry.get()))
+        size_letter = tkfont.Font(family="Verdana", size=9, weight="bold")
 
-        entry_S, entry_K, entry_T, entry_r, entry_sigma = entries
+        for i, (key, label_text) in enumerate(labels.items()):
+            label = tk.Label(self.model_frame, text=label_text, font=size_letter)
+            label.grid(row=i, column=0, padx=10, pady=10, sticky="e")
+            entry = tk.Entry(self.model_frame, font=('Verdana', 9))
+            entry.insert(0, str(defaults[key]))
+            entry.grid(row=i, column=1, padx=10, pady=10, sticky="w")
+            self.entries[key] = entry
 
-        black_scholes_obj = BlackScholes(strike=entry_K,
-                                         spot=entry_S,
-                                         maturity=entry_T,
-                                         risk_free=entry_r,
-                                         sigma=entry_sigma)
+        row_index = len(labels)
 
-        # Button to calculate the price
-        button_calculate = tk.Button(window, text="Calculate price", command=black_scholes_obj.calculate_call_and_put())
-        button_calculate.grid(row=5, columnspan=2, pady=10)
+        self.label_call_result = tk.Label(self.model_frame, text="Price of call: ", font=size_letter)
+        self.label_call_result.grid(row=row_index, column=0, columnspan=2, padx=10, pady=10, sticky="w")
 
-        # Display prices
-        label_call_result = tk.Label(window, text="Price of call: ")
-        label_call_result.grid(row=6, columnspan=2, pady=5)
+        self.label_put_result = tk.Label(self.model_frame, text="Price of put: ", font=size_letter)
+        self.label_put_result.grid(row=row_index + 1, column=0, columnspan=2, padx=10, pady=10, sticky="w")
 
-        label_put_result = tk.Label(window, text="Price of put: ")
-        label_put_result.grid(row=7, columnspan=2, pady=5)
+        button_calculate = tk.Button(self.model_frame, text="Calculate", command=self._calculate_price_button)
+        button_calculate.grid(row=row_index + 2, column=1, padx=10, pady=10, sticky="e")
 
-        label_call_result.config(text=f"Price of call: {black_scholes_obj.calculate_call():.2f}")
-        label_put_result.config(text=f"Price of put: {black_scholes_obj.calculate_put():.2f}")
+        button_back = tk.Button(self.model_frame, text="Back", command=self._show_initial_frame)
+        button_back.grid(row=row_index + 2, column=0, padx=10, pady=10, sticky="e")
 
-        # Responsive behavior
-        window.grid_columnconfigure(0, weight=1)
-        window.grid_columnconfigure(1, weight=1)
+        try:
+            formula_img = Image.open("Black-Scholes.png")
+            formula_img = formula_img.resize((339, 220))
+            self.formula_photo = ImageTk.PhotoImage(formula_img)
+            formula_label = tk.Label(self.model_frame, image=self.formula_photo)
+            formula_label.grid(row=0, column=2, rowspan=len(labels) + 2, padx=10, pady=10, sticky="nsew")
+        except FileNotFoundError:
+            messagebox.showerror("Error", "Formula image file not found!")
+
+        self.model_frame.columnconfigure(1, weight=1)
+        self.model_frame.columnconfigure(2, weight=1)
+
+    def _calculate_price_button(self):
+        """Calculation button command"""
+        try:
+            black_scholes_obj = BlackScholes(spot=float(self.entries["S"].get()),
+                                             strike=float(self.entries["K"].get()),
+                                             maturity=float(self.entries["T"].get()),
+                                             risk_free=float(self.entries["r"].get()),
+                                             sigma=float(self.entries["sigma"].get()))
+            self.label_call_result.config(text=f"Price of call: {black_scholes_obj.calculate_call():.2f}")
+            self.label_put_result.config(text=f"Price of put: {black_scholes_obj.calculate_put():.2f}")
+        except ValueError:
+            messagebox.showerror("Error", "Please enter numerical values !")
+
+    def _show_initial_frame(self):
+        """Function to go back to the main menu"""
+        self.model_frame.pack_forget()
+        self.initial_frame.pack(fill='both', expand=True)
+
+
