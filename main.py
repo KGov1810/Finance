@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from GUI.gui import GUI
+from GUI.main_window_gui import GUI
 
 
 def run():
