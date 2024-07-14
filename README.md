@@ -1,2 +1,3 @@
 # Finance
-Finance Training
+
+pip install yahooquery[premium]
