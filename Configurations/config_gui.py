@@ -1,9 +1,12 @@
 class CONFIG_GUI:
-    LABELS_PRICING = {"S": "Spot price (S):",
-                      "K": "Strike Price (K):",
-                      "T": "Maturity (T):",
-                      "r": "Risk Free Rate (r):",
-                      "sigma": "Volatility (sigma):"}
+
+    DATE_FORMAT = "%Y-%m-%d"
+
+    LABELS_PRICING = {"S": "Spot price (S)",
+                      "K": "Strike Price (K)",
+                      "T": "Maturity (T)",
+                      "r": "Risk Free Rate (r)",
+                      "sigma": "Volatility (sigma)"}
 
     DEFAULTS_PRICING = {"S": 100,
                         "K": 100,
@@ -11,8 +14,6 @@ class CONFIG_GUI:
                         "r": 0.05,
                         "sigma": 0.2}
 
-    LABELS_LIVE = {"symbol": "Stock symbols",
-                   "maturity": "Maturity (YYYY-MM-DD)"}
+    LABELS_LIVE = {"symbol": "Stock symbols"}
 
-    DEFAULTS_LIVE = {"symbol": "AAPL",
-                     "maturity": "2025-12-31"}
+    DEFAULTS_LIVE = {"symbol": "AAPL"}
